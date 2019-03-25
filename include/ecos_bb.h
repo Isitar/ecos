@@ -30,6 +30,15 @@
 #include "spla.h"
 #include "glblopts.h"
 
+/* Branching strategy 
+ * 
+ *  0 = most infeasible
+ *  1 = strong branching
+ *  2 = pseudocost
+ *  3 = hybrid
+ */
+#define MI_BRANCHING (1);
+
 /* Print verbosity */
 #define MI_PRINTLEVEL (1)
 
