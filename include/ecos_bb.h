@@ -30,17 +30,8 @@
 #include "spla.h"
 #include "glblopts.h"
 
-/* Branching strategy 
- * 
- *  0 = most infeasible
- *  1 = strong branching
- *  2 = pseudocost
- *  3 = hybrid
- */
-#define MI_BRANCHING (1);
-
 /* Print verbosity */
-#define MI_PRINTLEVEL (1)
+#define MI_PRINTLEVEL (0)
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)
@@ -85,6 +76,7 @@ typedef struct settings_bb{
 	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
 	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
 	pfloat integer_tol; 		/* integer rounding tolerance */
+	idxint branching_strategy;  /* branching strategy, 0 = most infeasible, 1 = strong branching, 2 = pseudocost, 3 = hybrid */
 } settings_bb;
 
 typedef struct node {
