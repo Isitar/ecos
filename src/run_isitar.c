@@ -4,8 +4,6 @@
  * File to run basic BB example
  */
 
-#define MI_PRINTLEVEL = 2
-
 #include <stdio.h>
 #include <time.h> 
 
@@ -13,86 +11,11 @@
 #include "data.h"
 #include <ecos_bb.h>
 
- //
- //int test1()
- //{
- //	// number of primal variables
- //	idxint n = 2;
- //
- //	// number of constraints
- //	idxint m = 0;
- //
- //	// number of eq constraints 
- //	idxint p = 0;
- //
- //	// dimension of the positive orthan R^I_+
- //	idxint l = 1;
- //
- //	// number of second order cones present in problem
- //	idxint ncones = 0;
- //
- //	// array of length ncones; q[i] defines the dimension of the cone
- //	idxint* q[0] = {};
- //
- //	//number of exponential cones present in problem
- //	idxint e = 0;
- //
- //	//arrays for matrix G in column compressed storage (CCS)
- //	pfloat* Gpr[0] = {};
- //
- //	//arrays for matrix G in column compressed storage (CCS)
- //	idxint* Gjc[0] = {};
- //
- //	//arrays for matrix G in column compressed storage (CCS)
- //	idxint* Gir[0] = {};
- //
- //	// Arrays for matrix A in column compressed storage (CCS), can be null if no equality constraints are present
- //	pfloat* Apr[0] = {};
- //
- //	// Arrays for matrix A in column compressed storage (CCS), can be null if no equality constraints are present
- //	idxint* Ajc[0] = {};
- //
- //	// Arrays for matrix A in column compressed storage (CCS), can be null if no equality constraints are present
- //	idxint* Air[0] = {};
- //
- //	// array of length n
- //	pfloat c[2] = { 0.0, 0.0 };
- //
- //	// array of length m
- //	pfloat* h[0] = {};
- //
- //	// array of length p. can be null if no eq. constraints are present
- //	pfloat* b = NULL;
- //
- //	// nubmer of bool variables
- //	idxint num_bool_vars = 0;
- //
- //	// bool variable indizes, must be strictly monotonically incresing
- //	idxint* bool_vars_idx[0] = {};
- //
- //	//number of int vars
- //	idxint num_int_vars = 0;
- //
- //	//inizes of int vars, must be increasing
- //	idxint* int_vars_idx[0] = {};
- //
- //	// struct carrying custom settings for the bb module. can be null if default is desired
- //	settings_bb* stgs = NULL;
- //
- //
- //	ecos_bb_pwork* workModel = ECOS_BB_setup(n, m, p,
- //		l, ncones, q, e,
- //		Gpr, Gjc, Gir,
- //		Apr, Ajc, Air,
- //		c, h, b,
- //		num_bool_vars, bool_vars_idx,
- //		num_int_vars, int_vars_idx,
- //		stgs);
- //
- //	idxint exitflag = ECOS_BB_solve(workModel);
- //
- //	ECOS_BB_cleanup(workModel, 0);
- //}
+static void printStats(ecos_bb_pwork* work)
+{
+	PRINTTEXT("cost: %f\n", eddot(work->ecos_prob->n, work->x, work->c));
+	PRINTTEXT("num iterations: %d\n", work->iter);
+}
 
 int lp_LPA()
 {
@@ -369,7 +292,11 @@ int ilp_Prob1()
 	return exitFlag;
 }
 
-int ilp_noswot()
+/**
+ *rows  cols     nz     int bin cont obj
+ *182 	128 	735 	25 	75 	28 	 -41
+ */
+int ilp_noswot(const idxint branching_strategy)
 {
 	idxint n = 333;
 	idxint m = 333;
@@ -397,15 +324,25 @@ int ilp_noswot()
 	idxint num_int = 25;
 	idxint int_idx[25] = { 231, 233, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253, 255, 257, 259, 261, 263, 265, 267, 269, 271, 273, 275, 277, 279 };
 	ecos_bb_pwork *noswot; idxint exitFlag;
-	noswot = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, NULL);
+	settings_bb* settings = get_default_ECOS_BB_settings();
+	settings->branching_strategy = branching_strategy;
+	noswot = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
 	exitFlag = ECOS_BB_solve(noswot);
-	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, noswot->x[i]); }
+	PRINTTEXT("exit flag: %d\n", exitFlag);
+	PRINTTEXT("cost: %f\n", eddot(noswot->ecos_prob->n, noswot->ecos_prob->x, noswot->ecos_prob->c));
+
+	/*for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, noswot->x[i]); }
 	PRINTTEXT("UB: %f\n", noswot->nodes->U);
-	PRINTTEXT("LB: %f\n", noswot->nodes->L);
+	PRINTTEXT("LB: %f\n", noswot->nodes->L);*/
+	ECOS_BB_cleanup(noswot, 0);
 	return exitFlag;
 }
 
-int ilp_BELL5()
+/**
+ *ROWS   COLS     INT     0/1    CONT        INT SOLN          LP SOLN
+ *91     104      58      30      46       8966406.49       8608417.95
+ */
+int ilp_BELL5(const idxint branching_strategy)
 {
 	idxint n = 223;
 	idxint m = 223;
@@ -433,11 +370,20 @@ int ilp_BELL5()
 	idxint num_int = 28;
 	idxint int_idx[28] = { 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148 };
 	ecos_bb_pwork *BELL5; idxint exitFlag;
-	BELL5 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, NULL);
+
+	settings_bb* settings = get_default_ECOS_BB_settings();
+	settings->branching_strategy = branching_strategy;
+	/*if (branching_strategy == 0)
+	{
+		settings->maxit *= 15;
+	}*/
+
+	BELL5 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
 	exitFlag = ECOS_BB_solve(BELL5);
-	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, BELL5->x[i]); }
-	PRINTTEXT("UB: %f\n", BELL5->nodes->U);
-	PRINTTEXT("LB: %f\n", BELL5->nodes->L);
+	//for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, BELL5->x[i]); }
+	PRINTTEXT("exit flag: %d\n", exitFlag);
+	PRINTTEXT("cost: %f\n", eddot(BELL5->ecos_prob->n, BELL5->ecos_prob->x, BELL5->ecos_prob->c));
+
 	return exitFlag;
 }
 
@@ -469,8 +415,12 @@ int ilp_gen_ip054()
 	idxint num_int = 30;
 	idxint int_idx[30] = { 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56 };
 	ecos_bb_pwork *gen_ip054; idxint exitFlag;
+	
+
 	gen_ip054 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, NULL);
 	exitFlag = ECOS_BB_solve(gen_ip054);
+	
+
 	/*for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, gen_ip054->x[i]); }
 	PRINTTEXT("UB: %f\n", gen_ip054->nodes->U);
 	PRINTTEXT("LB: %f\n", gen_ip054->nodes->L);*/
@@ -478,7 +428,7 @@ int ilp_gen_ip054()
 }
 
 
-int ilp_markshare_4_0(idxint branching_strategy)
+int ilp_markshare_4_0(const idxint branching_strategy)
 {
 	idxint n = 34;
 	idxint m = 34;
@@ -518,11 +468,57 @@ int ilp_markshare_4_0(idxint branching_strategy)
 	markshare_4_0 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
 	exitFlag = ECOS_BB_solve(markshare_4_0);
 	PRINTTEXT("exit flag: %d\n", exitFlag);
-	PRINTTEXT("cost: %f\n", eddot(markshare_4_0->ecos_prob->n, markshare_4_0->ecos_prob->x, markshare_4_0->ecos_prob->c));
+	printStats(markshare_4_0);
+	//PRINTTEXT("cost: %f\n", eddot(markshare_4_0->ecos_prob->n, markshare_4_0->ecos_prob->x, markshare_4_0->ecos_prob->c));
 	ECOS_BB_cleanup(markshare_4_0, 0);
 	/*for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, markshare_4_0->x[i]); }
 	PRINTTEXT("UB: %f\n", markshare_4_0->nodes->U);
 	PRINTTEXT("LB: %f\n", markshare_4_0->nodes->L);*/
+	return exitFlag;
+}
+
+/*
+ * NAME      ROWS    COLS     INT     0/1    CONT         INT SOLN          LP SOLN
+ * flugpl      18      18      11       0       7          1201500       1167185.73
+ */
+int ilp_FLUGPL(const idxint branching_strategy)
+{
+	idxint n = 46;
+	idxint m = 46;
+	idxint p = 34;
+	idxint l = 46;
+	idxint nCones = 0;
+
+	// cost function
+	pfloat c[46] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2700, 1500, 30, 2700, 1500, 30, 2700, 1500, 30, 2700, 1500, 30, 2700, 1500, 30, 2700, 1500, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+	//cone
+	idxint Gjc[47] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46 };
+	idxint Gir[46] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
+	pfloat Gpr[46] = { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 };
+	pfloat h[46] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+	idxint *q = NULL;
+
+	//lp matrix
+	idxint Ajc[47] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 19, 21, 27, 30, 32, 38, 41, 43, 49, 52, 54, 60, 63, 65, 70, 72, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90 };
+	idxint Air[90] = { 1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 0, 1, 2, 3, 1, 3, 18, 1, 2, 3, 4, 5, 6, 19, 20, 4, 6, 21, 4, 5, 6, 7, 8, 9, 22, 23, 7, 9, 24, 7, 8, 9, 10, 11, 12, 25, 26, 10, 12, 27, 10, 11, 12, 13, 14, 15, 28, 29, 13, 15, 30, 13, 14, 15, 16, 17, 31, 32, 16, 33, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33 };
+	pfloat Apr[90] = { -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 150, -20, 0.9, -100, 1, 1, 1, 1, -1, 150, -20, 0.9, 1, 1, -100, 1, 1, 1, 1, -1, 150, -20, 0.9, 1, 1, -100, 1, 1, 1, 1, -1, 150, -20, 0.9, 1, 1, -100, 1, 1, 1, 1, -1, 150, -20, 0.9, 1, 1, -100, 1, 1, 1, 1, -1, 150, -20, 1, 1, -100, 1, 1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1 };
+	pfloat b[34] = { 60, 8000, 0, 0, 9000, 0, 0, 8000, 0, 0, 10000, 0, 0, 9000, 0, 0, 12000, 0, 18, 57, 75, 18, 57, 75, 18, 57, 75, 18, 57, 75, 18, 57, 75, 18 };
+	idxint num_bool = 0;
+	idxint *bool_idx = NULL;
+	idxint num_int = 11;
+	idxint int_idx[11] = { 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28 };
+	ecos_bb_pwork *FLUGPL; idxint exitFlag;
+	settings_bb * settings = get_default_ECOS_BB_settings();
+	settings->branching_strategy = branching_strategy;
+	FLUGPL = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
+	exitFlag = ECOS_BB_solve(FLUGPL);
+	PRINTTEXT("exit flag: % d\n", exitFlag);
+	PRINTTEXT("cost: %f\n", eddot(FLUGPL->ecos_prob->n, FLUGPL->ecos_prob->x, FLUGPL->ecos_prob->c));
+	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, FLUGPL->x[i]); }
+	PRINTTEXT("UB: %f\n", FLUGPL->nodes->U);
+	PRINTTEXT("LB: %f\n", FLUGPL->nodes->L);
+	ECOS_BB_cleanup(FLUGPL, 0);
 	return exitFlag;
 }
 
@@ -537,10 +533,10 @@ int main(void)
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
 	PRINTTEXT("Calling with branching strategy 1\n");
 	t = clock();
-	exitFlag = ilp_markshare_4_0(1);
+	idxint exitFlag2 = ilp_markshare_4_0(1);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
 
-	return (int)exitFlag;
+	return (int)exitFlag2;
 }
 
