@@ -18,5 +18,16 @@
     <ClCompile Include="..\..\src\run_isitar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="problem_instances.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="problem_instances.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\external\amd\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\external\amd\include;$(ProjectDir)\..\..\src;$(ProjectDir)\</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -122,6 +122,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\run_isitar.c" />
+    <ClCompile Include="problem_instances.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="problem_instances.h" />
+    <ClInclude Include="result.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
