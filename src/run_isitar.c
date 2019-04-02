@@ -535,10 +535,10 @@ int main(void)
 	idxint exitFlag = ilp_markshare_4_0(BRANCHING_STRATEGY_MOST_INFEASIBLE,1000);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
-	/*PRINTTEXT("Calling with branching strategy 1\n");
+	PRINTTEXT("Calling with branching strategy 1\n");
 	t = clock();
 	idxint exitFlag2 = ilp_markshare_4_0(BRANCHING_STRATEGY_STRONG_BRANCHING, 1000);
-	t = clock() - t;*/
+	t = clock() - t;
 	PRINTTEXT("Calling with branching strategy 1\n");
 	t = clock();
 	idxint exitFlag3 = ilp_markshare_4_0(BRANCHING_STRATEGY_RANDOM, 1000);
