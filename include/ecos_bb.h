@@ -74,7 +74,7 @@ enum BRANCHING_STRATEGY
 {
 	BRANCHING_STRATEGY_MOST_INFEASIBLE = 0,
 	BRANCHING_STRATEGY_STRONG_BRANCHING = 1,
-	BRANCHING_STRATEGY_PSEUDO_COST_BRANCHING = 2,
+	BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING = 2,
 	BRANCHING_STRATEGY_HYBRID = 3,
 	BRANCHING_STRATEGY_RANDOM = 4
 };
@@ -135,11 +135,17 @@ typedef struct ecos_bb_pwork{
 	/* Tmp data */
 	char* tmp_bool_node_id;
 	pfloat* tmp_int_node_id;
-	
+	idxint iter;
+
 	/* Tmp nodes used for strong branching */
 	char* tmp_branching_bool_node_id;
 	pfloat* tmp_branching_int_node_id;
-	idxint iter;
+	
+	/* Pseudocost branching values */
+	pfloat* pseudocost_bin_sum;
+	pfloat* pseudocost_int_sum;
+	idxint* pseudocost_bin_cnt;
+	idxint* pseudocost_int_cnt;
 
 	/* Stored pointers to prevent memory leaks */
 	pfloat* Gpr_new;

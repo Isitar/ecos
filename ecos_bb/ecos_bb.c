@@ -202,11 +202,11 @@ static void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split
  */
 static void get_branch_var_random(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val) {
 	idxint i = rand() % (prob->num_bool_vars + prob->num_int_vars);
-	*split_val = i < prob->num_bool_vars 
-			? prob->ecos_prob->x[prob->bool_vars_idx[i]] 
-			: prob->ecos_prob->x[prob->int_vars_idx[i - prob->num_bool_vars]];
+	*split_val = i < prob->num_bool_vars
+		? prob->ecos_prob->x[prob->bool_vars_idx[i]]
+		: prob->ecos_prob->x[prob->int_vars_idx[i - prob->num_bool_vars]];
 	*split_idx = i;
-	
+
 #if MI_PRINTLEVEL > 1
 	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
@@ -269,10 +269,8 @@ static char is_infeasible(idxint ecos_result)
 /*
  * Returns the score based on paper "Branching rules revisited" by T. Achterberg, T. Koch and A. Martin
  */
-static pfloat get_score(pfloat q, pfloat q_down, pfloat q_up) {
+static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up) {
 	const pfloat mu = 1.0 / 6.0;
-	const pfloat delta_q_down = q_down - q;
-	const pfloat delta_q_up = q_up - q;
 	return (1 - mu) * min(delta_q_down, delta_q_up) + mu * max(delta_q_down, delta_q_up);
 }
 
@@ -290,7 +288,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 	// copy away tmp bool and int node since it's needed by another function -.-
 	const int bool_node_size = sizeof(char)*problem->num_bool_vars;
 	const int int_node_size = sizeof(pfloat) * 2 * problem->num_int_vars;
-	
+
 	// copy over current state to tmp_branching_nodes
 	memcpy_s(problem->tmp_branching_bool_node_id, bool_node_size, get_bool_node_id(node_idx, problem), bool_node_size);
 	memcpy_s(problem->tmp_branching_int_node_id, int_node_size, get_int_node_id(node_idx, problem), int_node_size);
@@ -299,7 +297,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 	set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
 	ECOS_solve(problem->ecos_prob);
 	const pfloat q = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
-	pfloat* x_values = malloc(sizeof(pfloat) * problem->ecos_prob->n);
+	pfloat* x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
 	memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
 
 	/* the lp-relaxation for the down branching solution */
@@ -310,7 +308,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 	idxint ecos_result;
 	idxint orig_maxit = problem->ecos_prob->stgs->maxit;
 	idxint orig_maxit_bk = problem->ecos_prob->stgs->max_bk_iter;
-	
+
 	problem->ecos_prob->stgs->maxit = 10;
 	problem->ecos_prob->stgs->max_bk_iter = 8;
 	for (idxint i = 0; i < (problem->num_bool_vars + problem->num_int_vars); ++i) {
@@ -372,12 +370,12 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 			ecos_result = ECOS_solve(problem->ecos_prob);
 			q_down = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
 			problem->tmp_branching_int_node_id[2 * int_idx + 1] = orig_val;
-			
+
 			if (is_infeasible(ecos_result))
 			{
 				// fix lower bound
 				get_int_node_id(node_idx, problem)[2 * int_idx] = -pfloat_ceil(current_value, problem->stgs->integer_tol);
-				problem->tmp_branching_int_node_id[2*int_idx] = -pfloat_ceil(current_value, problem->stgs->integer_tol);
+				problem->tmp_branching_int_node_id[2 * int_idx] = -pfloat_ceil(current_value, problem->stgs->integer_tol);
 				continue;
 			}
 
@@ -397,7 +395,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 			}
 		}
 
-		const pfloat curr_score = get_score(q, q_down, q_up);
+		const pfloat curr_score = get_score(q_down - q, q_up - q);
 		if (curr_score > best_score) {
 			*split_idx = i;
 			*split_val = current_value;
@@ -413,6 +411,192 @@ static void get_branch_var_strong_branching(ecos_bb_pwork* problem, idxint* spli
 	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
 }
+
+/**
+ * \brief 
+ * \param pseudocost_sums array with pseudocosts
+ * \param pseudocost_sums_cnt length of pseudocost arr
+ * \param up if up-branching (1) or down-branching (0)
+ * \return psi value
+ */
+static pfloat avg_pseudocost(pfloat* pseudocost_sums, const int pseudocost_sums_cnt, const char up)
+{
+	pfloat sum = 0.0;
+	int cnt = 0;
+	for (int i = 0; i < pseudocost_sums_cnt; ++i)
+	{
+		sum += pseudocost_sums[2 * i + up];
+		if (pseudocost_sums[2 * i + up] > 0)
+		{
+			++cnt;
+		}
+	}
+	if (cnt > 0)
+	{
+		return sum / cnt;
+	}
+	return 1.0;
+}
+
+static void set_pseudocost_psi(ecos_bb_pwork* problem, const idxint i, pfloat* down_psi, pfloat* up_psi)
+{
+	if (i < problem->num_bool_vars)
+	{
+		if (problem->pseudocost_bin_cnt[2 * i] == 0)
+		{
+			*down_psi = avg_pseudocost(problem->pseudocost_bin_sum, problem->num_bool_vars, 0);
+		}
+		else
+		{
+			*down_psi = (problem->pseudocost_bin_sum[2 * i] / problem->pseudocost_bin_cnt[2 * i]);
+		}
+
+		if (problem->pseudocost_bin_cnt[2 * i+1] == 0)
+		{
+			*up_psi = avg_pseudocost(problem->pseudocost_bin_sum, problem->num_bool_vars, 1);
+		}
+		else
+		{
+			*up_psi = (problem->pseudocost_bin_sum[2 * i + 1] / problem->pseudocost_bin_cnt[2 * i + 1]);
+		}
+	}
+	else
+	{
+		idxint var_idx = i - problem->num_bool_vars;
+		if (problem->pseudocost_int_cnt[2 * var_idx] == 0)
+		{
+			*down_psi = avg_pseudocost(problem->pseudocost_int_sum, problem->num_int_vars, 0);
+		}
+		else
+		{
+			*down_psi = (problem->pseudocost_int_sum[2 * var_idx] / problem->pseudocost_int_cnt[2 * var_idx]);;
+		}
+
+		if (problem->pseudocost_int_cnt[2 * var_idx + 1] == 0)
+		{
+			*up_psi = avg_pseudocost(problem->pseudocost_int_sum, problem->num_int_vars, 1);
+		}
+		else
+		{
+			*up_psi = (problem->pseudocost_int_sum[2 * var_idx + 1] / problem->pseudocost_int_cnt[2 * var_idx + 1]);
+		}
+	}
+}
+
+static void get_branch_var_pseudocost_branching(ecos_bb_pwork* problem, idxint* split_idx, pfloat* split_val, idxint node_idx)
+{
+	idxint i;
+	pfloat score, y;
+	pfloat high_score = -ECOS_INFINITY;
+	pfloat best_change_up = -1;
+	pfloat best_change_down = -1;
+	pfloat down_change_in_var;
+	pfloat up_change_in_var;
+	pfloat up_psi, down_psi;
+	for (i = 0; i < (problem->num_bool_vars + problem->num_int_vars); ++i) {
+		set_pseudocost_psi(problem, i, &down_psi, &up_psi);
+
+		if (i < problem->num_bool_vars) {
+			y = problem->ecos_prob->x[problem->bool_vars_idx[i]];
+			down_change_in_var = y;
+			up_change_in_var = MI_ONE - y;
+			score = get_score(down_change_in_var * down_psi,
+				up_change_in_var * up_psi);
+		}
+		else {
+			idxint var_idx = (i - problem->num_bool_vars);
+			y = problem->ecos_prob->x[problem->int_vars_idx[var_idx]];
+
+			down_change_in_var = y - pfloat_floor(y, problem->stgs->integer_tol);
+			up_change_in_var = 1.0 - down_change_in_var;
+			score = get_score(down_change_in_var * down_psi,
+				up_change_in_var * up_psi);
+		}
+
+		if (score > high_score) {
+			*split_idx = i;
+			*split_val = y;
+			high_score = score;
+			best_change_up = up_change_in_var;
+			best_change_down = down_change_in_var;
+		}
+	}
+
+	/* update pseudocost */
+	// copy over current state to tmp_branching_nodes
+	const int bool_node_size = sizeof(char) * problem->num_bool_vars;
+	const int int_node_size = sizeof(pfloat) * 2 * problem->num_int_vars;
+	memcpy_s(problem->tmp_branching_bool_node_id, bool_node_size, get_bool_node_id(node_idx, problem), bool_node_size);
+	memcpy_s(problem->tmp_branching_int_node_id, int_node_size, get_int_node_id(node_idx, problem), int_node_size);
+
+	// calculate current q
+	set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
+	ECOS_solve(problem->ecos_prob);
+	const pfloat q = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
+
+	if (*split_idx < problem->num_bool_vars) {
+		i = *split_idx;
+		// branch down
+		problem->tmp_branching_bool_node_id[i] = MI_ZERO;
+		set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
+		idxint ecos_result = ECOS_solve(problem->ecos_prob);
+		// if infeasible force branching on this node
+		pfloat q_down = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
+		if (!is_infeasible(ecos_result))
+		{
+			const pfloat change_in_q = q_down - q;
+			problem->pseudocost_bin_sum[2 * i] += (change_in_q / best_change_down);
+			problem->pseudocost_bin_cnt[2 * i] ++;
+		}
+
+		// branch up
+		problem->tmp_branching_bool_node_id[i] = MI_ONE;
+		set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
+		ecos_result = ECOS_solve(problem->ecos_prob);
+		pfloat q_up = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
+		if (!is_infeasible(ecos_result))
+		{
+			const pfloat change_in_q = q_up - q;
+			problem->pseudocost_bin_sum[2 * i + 1] += (change_in_q / best_change_up);
+			problem->pseudocost_bin_cnt[2 * i + 1] ++;
+		}
+	}
+	else
+	{
+		i = *split_idx - problem->num_bool_vars;
+		// branch down (set upper bound)
+		const pfloat orig_bound = problem->tmp_branching_int_node_id[2 * i + 1];
+		problem->tmp_branching_int_node_id[2 * i + 1] = *split_val - best_change_down;
+		set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
+		idxint ecos_result = ECOS_solve(problem->ecos_prob);
+		const pfloat q_down = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
+		problem->tmp_branching_int_node_id[2 * i + 1] = orig_bound;
+
+		if (!is_infeasible(ecos_result))
+		{
+			const pfloat change_in_q = q_down - q;
+			problem->pseudocost_int_sum[2 * i] += (change_in_q / best_change_down);
+			problem->pseudocost_int_cnt[2 * i] ++;
+		}
+
+		// branch up (set lower bound)
+		problem->tmp_branching_int_node_id[2 * i] = *split_val + best_change_up;
+		set_prob(problem, problem->tmp_branching_bool_node_id, problem->tmp_branching_int_node_id);
+		ecos_result = ECOS_solve(problem->ecos_prob);
+		const pfloat q_up = eddot(problem->ecos_prob->n, problem->ecos_prob->x, problem->ecos_prob->c);
+		if (!is_infeasible(ecos_result))
+		{
+			const pfloat change_in_q = q_up - q;
+			problem->pseudocost_int_sum[2 * i + 1] += (change_in_q / best_change_up);
+			problem->pseudocost_int_cnt[2 * i + 1] ++;
+		}
+	}
+
+#if MI_PRINTLEVEL > 1
+	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
+#endif
+}
+
 /*
  * Stores the ecos solution to the array inside ecos_bb
  */
@@ -454,7 +638,7 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 	if (prob->stgs->verbose) { print_ecos_solution(prob); }
 	if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_DINF) {
 		PRINTTEXT("1Exit code: %u\n", ret_code);
-}
+	}
 #endif
 
 	if (ret_code >= 0 ||
@@ -490,6 +674,9 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 			case BRANCHING_STRATEGY_STRONG_BRANCHING:
 				get_branch_var_strong_branching(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val), node_idx);
 				break;
+			case BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING:
+				get_branch_var_pseudocost_branching(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val), node_idx);
+				break;
 			case BRANCHING_STRATEGY_RANDOM:
 				get_branch_var_random(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val));
 			default:;
@@ -508,14 +695,14 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 			if (prob->stgs->verbose) { print_ecos_solution(prob); }
 			if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_DINF) {
 				PRINTTEXT("2Exit code: %u\n", ret_code);
-		}
+			}
 #endif
 			if (ret_code == ECOS_OPTIMAL) {
 				/* Use the node's U as tmp storage */
 				prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 				viable_rounded_sol = 1;
 			}
-	}
+			}
 		else { /* This is already an integer solution*/
 			prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
 			prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
@@ -597,7 +784,7 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 	if (prob->stgs->verbose) {
 		PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
 		PRINTTEXT("================================================\n");
-}
+	}
 #endif
 
 	/* Initialize to root node and execute steps 1 on slide 6 */
