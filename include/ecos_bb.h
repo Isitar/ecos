@@ -70,13 +70,22 @@
 extern "C" {
 #endif
 
+enum BRANCHING_STRATEGY
+{
+	BRANCHING_STRATEGY_MOST_INFEASIBLE = 0,
+	BRANCHING_STRATEGY_STRONG_BRANCHING = 1,
+	BRANCHING_STRATEGY_PSEUDO_COST_BRANCHING = 2,
+	BRANCHING_STRATEGY_HYBRID = 3,
+	BRANCHING_STRATEGY_RANDOM = 4
+};
+
 typedef struct settings_bb{
 	idxint maxit;               /* maximum number of iterations         */
     idxint verbose;             /* verbosity bool for PRINTLEVEL < 3    */
 	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
 	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
 	pfloat integer_tol; 		/* integer rounding tolerance */
-	idxint branching_strategy;  /* branching strategy, 0 = most infeasible, 1 = strong branching, 2 = pseudocost, 3 = hybrid */
+	enum BRANCHING_STRATEGY branching_strategy;  
 } settings_bb;
 
 typedef struct node {

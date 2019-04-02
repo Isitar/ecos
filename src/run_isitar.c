@@ -425,7 +425,7 @@ int ilp_gen_ip054(const idxint branching_strategy)
 }
 
 
-int ilp_markshare_4_0(const idxint branching_strategy, idxint numIterations)
+int ilp_markshare_4_0(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations)
 {
 	idxint n = 34;
 	idxint m = 34;
@@ -532,15 +532,19 @@ int main(void)
 {
 	PRINTTEXT("Calling with branching strategy 0\n");
 	clock_t t = clock();
-	idxint exitFlag = ilp_markshare_4_0(0,1000);
+	idxint exitFlag = ilp_markshare_4_0(BRANCHING_STRATEGY_MOST_INFEASIBLE,1000);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
+	/*PRINTTEXT("Calling with branching strategy 1\n");
+	t = clock();
+	idxint exitFlag2 = ilp_markshare_4_0(BRANCHING_STRATEGY_STRONG_BRANCHING, 1000);
+	t = clock() - t;*/
 	PRINTTEXT("Calling with branching strategy 1\n");
 	t = clock();
-	idxint exitFlag2 = ilp_markshare_4_0(1, 1000);
+	idxint exitFlag3 = ilp_markshare_4_0(BRANCHING_STRATEGY_RANDOM, 1000);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
 
-	return (int)exitFlag2;
+	return (int)1;
 }
 

@@ -198,6 +198,22 @@ static void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split
 
 
 /*
+ * Implementation for random branching
+ */
+static void get_branch_var_random(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val) {
+	idxint i = rand() % (prob->num_bool_vars + prob->num_int_vars);
+	*split_val = i < prob->num_bool_vars 
+			? prob->ecos_prob->x[prob->bool_vars_idx[i]] 
+			: prob->ecos_prob->x[prob->int_vars_idx[i - prob->num_bool_vars]];
+	*split_idx = i;
+	
+#if MI_PRINTLEVEL > 1
+	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
+#endif
+}
+
+
+/*
  * Updates the solver's lb and ub contraints for integer variables
  * to the bounds specified by the node
  */
@@ -468,12 +484,14 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 		if (branchable) { /* pfloat_round and check feasibility*/
 			switch (prob->stgs->branching_strategy)
 			{
-			case 0:
+			case BRANCHING_STRATEGY_MOST_INFEASIBLE:
 				get_branch_var(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val));
 				break;
-			case 1:
+			case BRANCHING_STRATEGY_STRONG_BRANCHING:
 				get_branch_var_strong_branching(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val), node_idx);
 				break;
+			case BRANCHING_STRATEGY_RANDOM:
+				get_branch_var_random(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val));
 			default:;
 			}
 			//PRINTTEXT("Branching on idx: %d with val: %f\n", prob->nodes[node_idx].split_idx, prob->nodes[node_idx].split_val);
