@@ -126,6 +126,10 @@ typedef struct ecos_bb_pwork{
 	/* Tmp data */
 	char* tmp_bool_node_id;
 	pfloat* tmp_int_node_id;
+	
+	/* Tmp nodes used for strong branching */
+	char* tmp_branching_bool_node_id;
+	pfloat* tmp_branching_int_node_id;
 	idxint iter;
 
 	/* Stored pointers to prevent memory leaks */

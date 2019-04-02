@@ -425,7 +425,7 @@ int ilp_gen_ip054(const idxint branching_strategy)
 }
 
 
-int ilp_markshare_4_0(const idxint branching_strategy)
+int ilp_markshare_4_0(const idxint branching_strategy, idxint numIterations)
 {
 	idxint n = 34;
 	idxint m = 34;
@@ -454,12 +454,18 @@ int ilp_markshare_4_0(const idxint branching_strategy)
 	idxint *int_idx = NULL;
 	ecos_bb_pwork *markshare_4_0; idxint exitFlag;
 
-	
+
 	settings_bb* settings = get_default_ECOS_BB_settings();
 	settings->branching_strategy = branching_strategy;
-	if (branching_strategy == 0)
+	if (numIterations == 0) {
+		if (branching_strategy == 0)
+		{
+			settings->maxit *= 15;
+		}
+	}
+	else
 	{
-		settings->maxit *= 15;
+		settings->maxit = numIterations;
 	}
 
 	markshare_4_0 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
@@ -526,12 +532,12 @@ int main(void)
 {
 	PRINTTEXT("Calling with branching strategy 0\n");
 	clock_t t = clock();
-	idxint exitFlag = ilp_gen_ip054(0);
+	idxint exitFlag = ilp_markshare_4_0(0,1000);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
 	PRINTTEXT("Calling with branching strategy 1\n");
 	t = clock();
-	idxint exitFlag2 = ilp_gen_ip054(1);
+	idxint exitFlag2 = ilp_markshare_4_0(1, 1000);
 	t = clock() - t;
 	PRINTTEXT("took %f\n", ((double)t) / CLOCKS_PER_SEC);
 

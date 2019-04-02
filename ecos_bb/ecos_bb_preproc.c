@@ -215,6 +215,10 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->tmp_bool_node_id = (char*) MALLOC( num_bool_vars*sizeof(char) );
     prob->tmp_int_node_id = (pfloat*) MALLOC( 2*num_int_vars*sizeof(pfloat) );
 
+	/* MALLOC the branching tmp nodes */
+	prob->tmp_branching_bool_node_id = MALLOC(num_bool_vars * sizeof(char));
+	prob->tmp_branching_int_node_id = MALLOC(2 * num_int_vars* sizeof(pfloat));
+
     /* Store the pointer to the boolean idx*/
     prob->bool_vars_idx = bool_vars_idx;
     prob->int_vars_idx = int_vars_idx;
