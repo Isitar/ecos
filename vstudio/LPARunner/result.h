@@ -43,6 +43,9 @@ static void print_result_header()
 }
 static char* result_stats(result* r)
 {
+	if (r == NULL) {
+		return NULL;
+	}
 	const int table_width = 72;
 	char* msg = malloc(table_width * sizeof(char));
 	snprintf(msg, table_width * sizeof(char), "%-20s\t%-5d\t%-4d\t%20.4f\t%5d\t%10.1fs\n", r->problem_name, r->branching_strategy, r->exitflag, r->objective, r->iterations, r->seconds_passed);
@@ -50,6 +53,9 @@ static char* result_stats(result* r)
 }
 static void print_result_stats(result* r)
 {
+	if (r == NULL) {
+		return;
+	}
 	printf(result_stats(r));
 }
 

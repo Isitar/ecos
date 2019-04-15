@@ -1,0 +1,5 @@
+Problem name        	strat	exit	           objective	 iter	       time
+ilp_hs18            	0    	0   	           -170.0000	    5	       0.0s
+ilp_hs18            	1    	0   	           -170.0000	    5	       0.0s
+ilp_hs18            	2    	0   	           -170.0000	    5	       0.0s
+ilp_hs18            	4    	0   	           -170.0000	   11	       0.0s
