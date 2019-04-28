@@ -92,8 +92,13 @@ typedef struct node {
 	char status;
 	pfloat L;
 	pfloat U;
+	pfloat Q;
 	idxint split_idx;
 	pfloat split_val;
+	idxint prev_split_idx;
+	pfloat prev_split_val;
+	pfloat prev_Q;
+	BOOL up_branch_node;
 } node;
 
 /* Wrapper for mixed integer module */
