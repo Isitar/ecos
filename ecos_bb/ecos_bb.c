@@ -457,11 +457,12 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 }
 #endif
 
-	if (ret_code >= 0 ||
-		ret_code == ECOS_MAXIT ||
-		ret_code == ECOS_NUMERICS)
-	{
-		prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
+    if (ret_code == ECOS_OPTIMAL ||
+        ret_code == ECOS_OPTIMAL + ECOS_INACC_OFFSET ||
+        ret_code == ECOS_MAXIT ||
+        ret_code == ECOS_NUMERICS )
+    {
+        prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
 		/* Figure out if x is already an integer solution
 			if the solution had no numerical errors*/
