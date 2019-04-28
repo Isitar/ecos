@@ -20,5 +20,6 @@ idxint lp_Prob1(const idxint);
 result* ilp_qiu(enum BRANCHING_STRATEGY, idxint);
 result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY, idxint);
 result* ilp_ILPHS18(enum BRANCHING_STRATEGY, idxint idxint);
+result* ilp_VPM2(enum BRANCHING_STRATEGY, idxint idxint);
 
 
