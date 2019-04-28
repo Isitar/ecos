@@ -29,6 +29,7 @@
 #include "math.h"
 #include "equil.h"
 #include "spla.h"
+#include <time.h>
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
@@ -279,6 +280,8 @@ static char is_infeasible(idxint ecos_result)
  * Returns the score based on paper "Branching rules revisited" by T. Achterberg, T. Koch and A. Martin
  */
 static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up) {
+	const pfloat epsilon = 0.0000001;
+	return max(epsilon, delta_q_down) * max(epsilon, delta_q_up);
 	const pfloat mu = 1.0 / 6.0;
 	return (1 - mu) * min(delta_q_down, delta_q_up) + mu * max(delta_q_down, delta_q_up);
 }
@@ -708,7 +711,7 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 			idxint split_idx = prob->nodes[node_idx].prev_split_idx;
 			const idxint offset = prob->nodes[node_idx].up_branch_node ? 1 : 0;
 
-			const pfloat change_in_q =prob->nodes[node_idx].Q - prob->nodes[node_idx].prev_Q;
+			const pfloat change_in_q = prob->nodes[node_idx].Q - prob->nodes[node_idx].prev_Q;
 			const pfloat change_in_var = prob->nodes[node_idx].up_branch_node
 				? pfloat_ceil(prob->nodes[node_idx].prev_split_val, prob->stgs->integer_tol) - prob->nodes[node_idx].prev_split_val
 				: prob->nodes[node_idx].prev_split_val - pfloat_floor(prob->nodes[node_idx].prev_split_val, prob->stgs->integer_tol);
@@ -724,8 +727,8 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 				split_idx -= prob->num_bool_vars;
 				sum_ptr = &prob->pseudocost_int_sum[2 * split_idx + offset];
 				cnt_ptr = &prob->pseudocost_int_cnt[2 * split_idx + offset];
-				
-				
+
+
 			}
 			*sum_ptr += change_in_q / change_in_var;
 			*cnt_ptr += 1;
@@ -879,6 +882,23 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 	}
 #endif
 
+#if LPA_FILE > 0 
+	time_t rawtime = time(NULL);
+	char filename[255];
+	char time_str[26];
+	struct tm tm_info;
+	localtime_s(&tm_info, &rawtime);
+	strftime(time_str, sizeof(time_str), "%Y_%m_%d_%H_%M_%S", &tm_info);
+	sprintf_s(filename, sizeof(filename), "%s_%d.csv", time_str, prob->stgs->branching_strategy);
+	
+	FILE *fp;
+	errno_t retVal = fopen_s(&fp, filename, "w");
+
+	fprintf_s(fp, "time;iter;L;U\n");
+	clock_t start_clock = clock();
+	
+#endif
+
 	/* Initialize to root node and execute steps 1 on slide 6 */
 	/* of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf*/
 	prob->iter = 0;
@@ -893,6 +913,11 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 
 #if MI_PRINTLEVEL > 0
 		if (prob->stgs->verbose) { print_progress(prob); }
+#endif
+
+
+#if LPA_FILE > 0 
+		fprintf_s(fp, "%d;%u;%.2f;%.2f\n", clock() - start_clock, (int)prob->iter, prob->global_L, prob->global_U);
 #endif
 
 		++(prob->iter);
@@ -917,6 +942,9 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 	if (prob->stgs->verbose) { print_progress(prob); }
 #endif
 
+#if LPA_FILE > 0 
+	fclose(fp);
+#endif
 	return get_ret_code(prob);
 }
 

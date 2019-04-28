@@ -17,7 +17,7 @@ int main(void)
 	idxint iterations = 1000;
 
 	PRINTTEXT("Calling with branching strategy 2\n");
-	result* result_pseudo_branching = ilp_markshare_4_0(BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING, 100* iterations);
+	result* result_pseudo_branching = ilp_markshare_4_0(BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING, iterations);
 
 	PRINTTEXT("Calling with branching strategy 0\n");
 	result* result_most_infeasible = ilp_markshare_4_0(BRANCHING_STRATEGY_MOST_INFEASIBLE, iterations);
@@ -64,10 +64,6 @@ int main(void)
 		fprintf_s(fp, result_stats(result_random_branching));
 		fclose(fp);
 	}
-
-
-
 	
 	return (int)1;
 }
-
