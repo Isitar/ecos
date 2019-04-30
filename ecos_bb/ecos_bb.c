@@ -163,7 +163,7 @@ static pfloat get_global_L(ecos_bb_pwork* prob){
     idxint i;
     pfloat L = ECOS_INFINITY;
     for(i=0; i <= prob->iter; ++i) L = MIN(L,prob->nodes[i].L);
-    return L;
+    return MAX(prob->global_L, L);
 }
 
 /*
