@@ -211,12 +211,19 @@ static void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split
  * Implementation for random branching
  */
 static void get_branch_var_random(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val) {
-	idxint i = rand() % (prob->num_bool_vars + prob->num_int_vars);
-	*split_val = i < prob->num_bool_vars
-		? prob->ecos_prob->x[prob->bool_vars_idx[i]]
-		: prob->ecos_prob->x[prob->int_vars_idx[i - prob->num_bool_vars]];
-	*split_idx = i;
+	while (1) {
+		idxint i = rand() % (prob->num_bool_vars + prob->num_int_vars);
+		*split_val = i < prob->num_bool_vars
+			? prob->ecos_prob->x[prob->bool_vars_idx[i]]
+			: prob->ecos_prob->x[prob->int_vars_idx[i - prob->num_bool_vars]];
+		*split_idx = i;
+		if (float_eqls(*split_val, pfloat_floor(*split_val, prob->stgs->integer_tol), prob->stgs->integer_tol) ||
+			float_eqls(*split_val, pfloat_ceil(*split_val, prob->stgs->integer_tol), prob->stgs->integer_tol)) {
+			continue;
+		}
 
+		break;
+	}
 #if MI_PRINTLEVEL > 1
 	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
@@ -280,8 +287,8 @@ static char is_infeasible(idxint ecos_result)
  * Returns the score based on paper "Branching rules revisited" by T. Achterberg, T. Koch and A. Martin
  */
 static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up) {
-	const pfloat epsilon = 0.0000001;
-	return max(epsilon, delta_q_down) * max(epsilon, delta_q_up);
+	//const pfloat epsilon = 0.0000001;
+	//return max(epsilon, delta_q_down) * max(epsilon, delta_q_up);
 	const pfloat mu = 1.0 / 6.0;
 	return (1 - mu) * min(delta_q_down, delta_q_up) + mu * max(delta_q_down, delta_q_up);
 }

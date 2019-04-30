@@ -14,21 +14,25 @@
 
 int main(void)
 {
+	result* result_pseudo_branching = NULL;
+	result* result_most_infeasible = NULL;
+	result* result_strong_branching = NULL;
+	result* result_random_branching = NULL;
+
 	idxint iterations = 1000;
 
-	PRINTTEXT("Calling with branching strategy 2\n");
-	result* result_pseudo_branching = ilp_markshare_4_0(BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING, iterations);
+	/*PRINTTEXT("Calling with branching strategy 2\n");
+	result_pseudo_branching = ilp_misc07(BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING, iterations);
 
 	PRINTTEXT("Calling with branching strategy 0\n");
-	result* result_most_infeasible = ilp_markshare_4_0(BRANCHING_STRATEGY_MOST_INFEASIBLE, iterations);
-	//
-	PRINTTEXT("Calling with branching strategy 1\n");
-	result* result_strong_branching = ilp_markshare_4_0(BRANCHING_STRATEGY_STRONG_BRANCHING, iterations);
-
+	result_most_infeasible = ilp_misc07(BRANCHING_STRATEGY_MOST_INFEASIBLE, iterations);
 	
+	PRINTTEXT("Calling with branching strategy 1\n");
+	result_strong_branching = ilp_misc07(BRANCHING_STRATEGY_STRONG_BRANCHING, iterations);
+	*/
 
 	PRINTTEXT("Calling with branching strategy 4\n");
-	result* result_random_branching = ilp_markshare_4_0(BRANCHING_STRATEGY_RANDOM, iterations);
+	result_random_branching = ilp_misc07(BRANCHING_STRATEGY_RANDOM, iterations);
 
 	print_result_header();
 

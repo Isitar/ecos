@@ -1,0 +1,4 @@
+Problem name        	strat	exit	           objective	 iter	       time
+markshare_4_0       	0    	10  	              8.0000	99999	     294.8s
+markshare_4_0       	1    	10  	              5.0000	99999	    2139.3s
+markshare_4_0       	2    	10  	              5.0000	199999	     782.1smarkshare_4_0       	4    	10  	              5.0000	99999	     282.2s
