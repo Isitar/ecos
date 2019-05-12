@@ -466,8 +466,9 @@ result* ilp_markshare_4_0(enum BRANCHING_STRATEGY branching_strategy, idxint num
  * NAME      ROWS    COLS     INT     0/1    CONT         INT SOLN          LP SOLN
  * flugpl      18      18      11       0       7          1201500       1167185.73
  */
-int ilp_FLUGPL(const idxint branching_strategy)
+result* ilp_FLUGPL(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations)
 {
+	clock_t t = clock();
 	idxint n = 46;
 	idxint m = 46;
 	idxint p = 34;
@@ -494,17 +495,25 @@ int ilp_FLUGPL(const idxint branching_strategy)
 	idxint num_int = 11;
 	idxint int_idx[11] = { 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28 };
 	ecos_bb_pwork *FLUGPL; idxint exitFlag;
-	settings_bb * settings = get_default_ECOS_BB_settings();
+	settings_bb* settings = get_default_ECOS_BB_settings();
 	settings->branching_strategy = branching_strategy;
+	if (numIterations == 0) {
+		if (branching_strategy == 0)
+		{
+			settings->maxit *= 15;
+		}
+	}
+	else
+	{
+		settings->maxit = numIterations;
+	}
 	FLUGPL = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
 	exitFlag = ECOS_BB_solve(FLUGPL);
-	PRINTTEXT("exit flag: % d\n", exitFlag);
-	PRINTTEXT("cost: %f\n", eddot(FLUGPL->ecos_prob->n, FLUGPL->ecos_prob->x, FLUGPL->ecos_prob->c));
-	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, FLUGPL->x[i]); }
-	PRINTTEXT("UB: %f\n", FLUGPL->nodes->U);
-	PRINTTEXT("LB: %f\n", FLUGPL->nodes->L);
+	t = clock() - t;
+
+	result* res = create_result("FLUGPL", exitFlag, FLUGPL->global_U, branching_strategy, FLUGPL->iter, ((double)t) / CLOCKS_PER_SEC);
 	ECOS_BB_cleanup(FLUGPL, 0);
-	return exitFlag;
+	return res;
 }
 
 
@@ -680,12 +689,12 @@ result* ilp_VPM2(const idxint branching_strategy, idxint numIterations)
 	ecos_bb_pwork *VPM2; idxint exitFlag;
 	settings_bb * settings = get_default_ECOS_BB_settings();
 	settings->branching_strategy = branching_strategy;
-	
+
 	if (numIterations != 0) {
 		settings->maxit = numIterations;
 	}
 	VPM2 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
-	
+
 	exitFlag = ECOS_BB_solve(VPM2);
 	t -= clock();
 	result* res = create_result("ilp_vpm2", exitFlag, VPM2->global_U, branching_strategy, VPM2->iter, ((double)t) / CLOCKS_PER_SEC);

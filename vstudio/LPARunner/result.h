@@ -3,7 +3,7 @@
 #include "ecos_bb.h"
 typedef struct result
 {
-	char* problem_name;
+	const char* problem_name;
 
 	idxint exitflag;
 	pfloat objective;
@@ -14,7 +14,7 @@ typedef struct result
 
 } result;
 
-static result* create_result(char* problem_name, idxint exitflag, pfloat objective, enum BRANCHING_STRATEGY branching_strategy, idxint iterations, double seconds_passed)
+static result* create_result(const char* problem_name, idxint exitflag, pfloat objective, enum BRANCHING_STRATEGY branching_strategy, idxint iterations, double seconds_passed)
 {
 	result* res = malloc(sizeof(result));
 	res->problem_name = problem_name;

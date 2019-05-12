@@ -87,7 +87,8 @@ typedef struct settings_bb{
 	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
 	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
 	pfloat integer_tol; 		/* integer rounding tolerance */
-	enum BRANCHING_STRATEGY branching_strategy;  
+	enum BRANCHING_STRATEGY branching_strategy;
+	idxint reliableN; /* number of pseudocost values needed for costs to be reliable */
 } settings_bb;
 
 typedef struct node {

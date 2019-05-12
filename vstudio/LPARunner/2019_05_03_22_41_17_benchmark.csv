@@ -1,0 +1,5 @@
+Problem name        	strat	exit	           objective	 iter	       time
+ilp_misc07          	0    	0   	           2809.9991	10328	   -4100.3s
+ilp_misc07          	1    	0   	           2809.9994	 5913	  -41135.5s
+ilp_misc07          	2    	10  	           2809.9995	11999	   -4623.6s
+ilp_misc07          	4    	10  	           2809.9992	11999	   -4947.4s

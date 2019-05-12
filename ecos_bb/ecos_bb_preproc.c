@@ -314,5 +314,6 @@ settings_bb* get_default_ECOS_BB_settings(){
     stgs->rel_tol_gap = MI_REL_EPS;
     stgs->integer_tol = MI_INT_TOL;
 	stgs->branching_strategy = 0;
+	stgs->reliableN = 6;
     return stgs;
 };
