@@ -598,9 +598,11 @@ static BOOL is_reliable(ecos_bb_pwork* problem, idxint i)
 {
 	if (i < problem->num_bool_vars)
 	{
-		return problem->pseudocost_bin_cnt[2 * i] > problem->stgs->reliableN;
+		return problem->pseudocost_bin_cnt[2 * i] > problem->stgs->reliableN &&
+			problem->pseudocost_bin_cnt[2 * i + 1] > problem->stgs->reliableN;
 	}
-	return problem->pseudocost_int_cnt[2 * (i - problem->num_bool_vars)] > problem->stgs->reliableN;
+	return problem->pseudocost_int_cnt[2 * (i - problem->num_bool_vars)] > problem->stgs->reliableN &&
+		problem->pseudocost_int_cnt[2 * (i - problem->num_bool_vars) + 1] > problem->stgs->reliableN;
 }
 
 static void get_branch_var_hybrid_branching(ecos_bb_pwork* problem, idxint* split_idx, pfloat* split_val, idxint node_idx)
@@ -648,40 +650,59 @@ static void get_branch_var_hybrid_branching(ecos_bb_pwork* problem, idxint* spli
 			{
 				initialize_strong_branching(problem, node_idx);
 				strong_initialized = TRUE;
-				
+
 				calc_tmp_branching_problem(problem, &q, &ecos_result);
 				x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
 				memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
 			}
-			
+
+			idxint var_idx = i;
+
 			pfloat q_down, q_up;
+			pfloat* sum_ptr;
+			idxint* cnt_ptr;
+			pfloat current_value;
 			if (i < problem->num_bool_vars) {
-				if (strong_branch_bool_var(problem, split_idx, split_val, node_idx, &q_down, &q_up, i, x_values[problem->bool_vars_idx[i]])) {
+				current_value = x_values[problem->bool_vars_idx[var_idx]];
+				if (strong_branch_bool_var(problem, split_idx, split_val, node_idx, &q_down, &q_up, i, current_value)) {
 					continue;
 				}
+				sum_ptr = problem->pseudocost_bin_sum;
+				cnt_ptr = problem->pseudocost_bin_cnt;
 			}
 			else {
-				if (strong_branch_int_var(problem, split_idx, split_val, node_idx, &q_down, &q_up, i, x_values[problem->int_vars_idx[i - problem->num_bool_vars]])) {
+				var_idx = i - problem->num_bool_vars;
+				current_value = x_values[problem->int_vars_idx[var_idx]];
+				if (strong_branch_int_var(problem, split_idx, split_val, node_idx, &q_down, &q_up, i, x_values[problem->int_vars_idx[var_idx]])) {
 					continue;
 				}
+				sum_ptr = problem->pseudocost_int_sum;
+				cnt_ptr = problem->pseudocost_int_cnt;
 			}
+			pfloat var_change_up = pfloat_ceil(current_value, problem->stgs->integer_tol) - current_value;
+			pfloat var_change_down = current_value - pfloat_floor(current_value, problem->stgs->integer_tol);
+			sum_ptr[2 * var_idx] += (q_down - q) / var_change_down;
+			cnt_ptr[2 * var_idx] += 1;
+			sum_ptr[2 * var_idx + 1] += (q_up - q) / var_change_up;
+			cnt_ptr[2 * var_idx + 1] += 1;
+
 			score = get_score(q_down - q, q_up - q);
 
-		}
+			}
 
 		if (score > high_score) {
 			*split_idx = i;
 			*split_val = y;
 			high_score = score;
 		}
-	}
+		}
 
 	//update_pseudocost_values(problem, *split_idx, *split_val, node_idx, best_change_down, best_change_up);
 
 #if MI_PRINTLEVEL > 1
 	PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
-}
+	}
 
 /*
  * Stores the ecos solution to the array inside ecos_bb
@@ -758,19 +779,17 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 			if (split_idx < prob->num_bool_vars) {
 				sum_ptr = &prob->pseudocost_bin_sum[2 * split_idx + offset];
 				cnt_ptr = &prob->pseudocost_bin_cnt[2 * split_idx + offset];
-		}
+			}
 			else
 			{
 				split_idx -= prob->num_bool_vars;
 				sum_ptr = &prob->pseudocost_int_sum[2 * split_idx + offset];
 				cnt_ptr = &prob->pseudocost_int_cnt[2 * split_idx + offset];
-
-
 			}
 			*sum_ptr += change_in_q / change_in_var;
 			*cnt_ptr += 1;
 			//PRINTTEXT("Node %d  |  split_idx: %d  | split_val:  %f  | prev_q:  %f  | q: %f  |  %f\n", node_idx, split_idx, prob->nodes[node_idx].prev_split_val, prob->nodes[node_idx].prev_Q, prob->nodes[node_idx].Q, change_in_q / change_in_var);
-	}
+		}
 
 
 		/* Figure out if x is already an integer solution
@@ -860,7 +879,7 @@ static void get_bounds(idxint node_idx, ecos_bb_pwork* prob) {
 			prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
 		}
 
-		}
+	}
 	else { /*Assume node infeasible*/
 		prob->nodes[node_idx].L = ECOS_INFINITY;
 		prob->nodes[node_idx].U = ECOS_INFINITY;

@@ -22,10 +22,22 @@ int main(void)
 
 
 
-	idxint iterations = 10000;
+	idxint iterations = 3000;
+
+	PRINTTEXT("Calling with branching strategy 0\n");
+	result_most_infeasible = ilp_PP08ACUTS(BRANCHING_STRATEGY_MOST_INFEASIBLE, 2 * iterations,0);
 	
+
+	/*PRINTTEXT("Calling with branching strategy 3\n");
+	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 1);
 	PRINTTEXT("Calling with branching strategy 3\n");
-	result_hybrid_branching = ilp_FLUGPL(BRANCHING_STRATEGY_HYBRID, iterations);
+	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 4);
+	PRINTTEXT("Calling with branching strategy 3\n");
+	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 6);
+	PRINTTEXT("Calling with branching strategy 3\n");
+	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 8);
+	PRINTTEXT("Calling with branching strategy 3\n");
+	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 20);*/
 	/*
 	PRINTTEXT("Calling with branching strategy 1\n");
 	result_strong_branching = ilp_FLUGPL(BRANCHING_STRATEGY_STRONG_BRANCHING, iterations);

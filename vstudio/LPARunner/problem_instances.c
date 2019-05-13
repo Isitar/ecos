@@ -571,7 +571,7 @@ result* ilp_qiu(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations
 }
 
 
-result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations)
+result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations, idxint nRel)
 {
 	clock_t t = clock();
 	idxint n = 486;
@@ -602,6 +602,7 @@ result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY branching_strategy, idxint numIter
 	ecos_bb_pwork *PP08ACUTS; idxint exitFlag;
 	settings_bb * settings = get_default_ECOS_BB_settings();
 	settings->branching_strategy = branching_strategy;
+	settings->reliableN = nRel;
 	if (numIterations != 0) {
 		settings->maxit = numIterations;
 	}
