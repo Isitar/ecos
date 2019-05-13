@@ -1,0 +1,50 @@
+gurobi> m = read("C:\git\mps-to-ecos-c-converter\MpsToEcosCConverter\MpsToEcosCConverter\markshare_4_0.mps")
+gurobi> m
+<gurobi.Model MIP instance markshare_4_0: 4 constrs, 34 vars, Parameter changes: LogFile=gurobi.log, CSIdleTimeout=1800>
+gurobi> m.setParam("Cuts", 0)
+Changed value of parameter Cuts to 0
+   Prev: -1  Min: -1  Max: 3  Default: -1
+gurobi> m.setParam("Presolve", 0)
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+gurobi> m.optimize()
+Optimize a model with 4 rows, 34 columns and 123 nonzeros
+Variable types: 4 continuous, 30 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [6e+02, 9e+02]
+Found heuristic solution: objective 3082.0000000
+Variable types: 0 continuous, 34 integer (30 binary)
+
+Root relaxation: objective 0.000000e+00, 13 iterations, 0.01 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0    4 3082.00000    0.00000   100%     -    0s
+H    0     0                     135.0000000    0.00000   100%     -    0s
+     0     0    0.00000    0    4  135.00000    0.00000   100%     -    0s
+     0     2    0.00000    0    4  135.00000    0.00000   100%     -    0s
+H   13    14                      62.0000000    0.00000   100%   1.7    0s
+H  113    81                      59.0000000    0.00000   100%   2.0    0s
+H  158   104                      51.0000000    0.00000   100%   2.0    0s
+*  283   152              18      39.0000000    0.00000   100%   2.0    0s
+H  341   149                      26.0000000    0.00000   100%   1.9    0s
+* 1009   275              17      18.0000000    0.00000   100%   1.9    0s
+* 1775   331              18      15.0000000    0.00000   100%   1.8    0s
+H 3111   372                      10.0000000    0.00000   100%   1.7    0s
+* 4430   375              20       6.0000000    0.00000   100%   1.7    0s
+*10766   297              27       4.0000000    0.00000   100%   1.5    0s
+*33200   579              27       3.0000000    0.00000   100%   1.6    1s
+*125455   206              28       1.0000000    0.00000   100%   1.6    3s
+ 174917   444    0.00000   33    4    1.00000    0.00000   100%   1.5    5s
+
+Explored 391533 nodes (556321 simplex iterations) in 9.39 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 10: 1 3 4 ... 51
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.000000000000e+00, best bound 1.000000000000e+00, gap 0.0000%

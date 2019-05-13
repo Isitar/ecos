@@ -1,0 +1,6 @@
+Problem name        	strat	exit	           objective	 iter	       time
+qiu                 	0    	10  	           8009.9999	 5999	     328.1s
+qiu                 	1    	10  	          10209.9999	 2999	    7328.5s
+qiu                 	2    	10  	           9190.0000	 5999	     355.0s
+qiu                 	3    	10  	           9460.0000	 5999	     875.1s
+qiu                 	4    	11  	                 inf	 5999	     365.5s
