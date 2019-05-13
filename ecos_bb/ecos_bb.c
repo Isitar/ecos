@@ -159,15 +159,22 @@ static void branch(idxint curr_node_idx, ecos_bb_pwork* prob) {
  * Function to return the next node to be expanded
  */
 static idxint get_next_node(ecos_bb_pwork* prob) {
+	if (prob->nodes[prob->dive_node_id].status == MI_SOLVED_BRANCHABLE)
+	{
+		return prob->dive_node_id;
+	}
 	idxint i;
 	idxint next_node = -1;
-	pfloat L = -ECOS_INFINITY;
+	//pfloat L = -ECOS_INFINITY;
+	pfloat L = ECOS_INFINITY;
 	for (i = 0; i <= prob->iter; ++i) {
-		if (prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L > L && prob->nodes[i].L < prob->global_U) {
+		//if (prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L > L && prob->nodes[i].L < prob->global_U) {
+		if (prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L < L && prob->nodes[i].L < prob->global_U) {
 			next_node = i;
 			L = prob->nodes[i].L;
 		}
 	}
+	prob->dive_node_id = next_node;
 	return next_node;
 }
 
@@ -961,6 +968,7 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 	/* Initialize to root node and execute steps 1 on slide 6 */
 	/* of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf*/
 	prob->iter = 0;
+	prob->dive_node_id = 0;
 	initialize_root(prob);
 	/*print_node(prob, curr_node_idx);*/
 	get_bounds(curr_node_idx, prob);
