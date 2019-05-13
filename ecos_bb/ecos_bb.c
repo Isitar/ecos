@@ -955,7 +955,12 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 	struct tm tm_info;
 	localtime_s(&tm_info, &rawtime);
 	strftime(time_str, sizeof(time_str), "%Y_%m_%d_%H_%M_%S", &tm_info);
-	sprintf_s(filename, sizeof(filename), "%s_%d.csv", time_str, prob->stgs->branching_strategy);
+	if (prob->stgs->branching_strategy == BRANCHING_STRATEGY_HYBRID) {
+		sprintf_s(filename, sizeof(filename), "%s_%d_%d.csv", time_str, prob->stgs->branching_strategy, prob->stgs->reliableN);
+	}
+	else {
+		sprintf_s(filename, sizeof(filename), "%s_%d.csv", time_str, prob->stgs->branching_strategy);
+	}
 
 	FILE *fp;
 	errno_t retVal = fopen_s(&fp, filename, "w");

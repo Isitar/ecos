@@ -22,7 +22,7 @@ int main(void)
 
 
 
-	idxint iterations = 3000;
+	idxint iterations = 25000;
 
 	PRINTTEXT("Calling with branching strategy 0\n");
 	result_most_infeasible = ilp_PP08ACUTS(BRANCHING_STRATEGY_MOST_INFEASIBLE, 2 * iterations,0);
@@ -39,8 +39,6 @@ int main(void)
 	PRINTTEXT("Calling with branching strategy 3\n");
 	result_hybrid_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_HYBRID, 2 * iterations, 20);
 	
-	PRINTTEXT("Calling with branching strategy 1\n");
-	result_strong_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_STRONG_BRANCHING, iterations, 0);
 	
 	PRINTTEXT("Calling with branching strategy 2\n");
 	result_pseudo_branching = ilp_PP08ACUTS(BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING, 2 * iterations, 0);
