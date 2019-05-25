@@ -35,8 +35,6 @@
   /* Print verbosity */
 #define MI_PRINTLEVEL (1)
 
-#define LPA_FILE (1)
-
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)
 #define MI_REL_EPS (1E-3)
@@ -114,7 +112,7 @@ extern "C"
 		idxint prev_split_idx;
 		pfloat prev_split_val;
 		pfloat prev_relaxation;
-		BOOL up_branch_node;
+		int up_branch_node;
 	} node;
 
 	/* Wrapper for mixed integer module */
