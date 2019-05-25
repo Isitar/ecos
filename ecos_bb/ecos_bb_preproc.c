@@ -21,6 +21,9 @@
 /*
  * The branch and bound module is (c) Han Wang, Stanford University,
  * [hanwang2@stanford.edu]
+ * 
+ * Extended with improved branching rules by Pascal Lüscher, student of FHNW
+ * [luescherpascal@gmail.com]
  */
 
 #include "glblopts.h"
@@ -302,6 +305,10 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->z);
     FREE(prob->s);
     FREE(prob->info);
+	FREE(prob->pseudocost_bin_cnt);
+	FREE(prob->pseudocost_bin_sum);
+	FREE(prob->pseudocost_int_cnt);
+	FREE(prob->pseudocost_int_sum);
     if (prob->default_settings){FREE(prob->stgs);}
     FREE(prob);
 }
@@ -313,7 +320,8 @@ settings_bb* get_default_ECOS_BB_settings(){
     stgs->abs_tol_gap = MI_ABS_EPS;
     stgs->rel_tol_gap = MI_REL_EPS;
     stgs->integer_tol = MI_INT_TOL;
-	stgs->branching_strategy = 0;
-	stgs->reliableN = 6;
+	stgs->branching_strategy = BRANCHING_STRATEGY_RELIABILITY;
+	stgs->reliable_eta = 6;
+	stgs->node_selection_method = DIVE_LOWER_NODE;
     return stgs;
 };

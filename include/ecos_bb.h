@@ -18,10 +18,13 @@
  */
 
 
-/*
- * The branch and bound module is (c) Han Wang, Stanford University,
- * [hanwang2@stanford.edu]
- */
+ /*
+  * The branch and bound module is (c) Han Wang, Stanford University,
+  * [hanwang2@stanford.edu]
+  * 
+  * Extended with improved branching rules by Pascal Lüscher, student of FHNW
+  * [luescherpascal@gmail.com]
+  */
 
 #ifndef __ecos_bb_H__
 #define __ecos_bb_H__
@@ -30,7 +33,7 @@
 #include "spla.h"
 #include "glblopts.h"
 
-/* Print verbosity */
+  /* Print verbosity */
 #define MI_PRINTLEVEL (1)
 
 #define LPA_FILE (1)
@@ -72,152 +75,161 @@
 extern "C" {
 #endif
 
-enum BRANCHING_STRATEGY
-{
-	BRANCHING_STRATEGY_MOST_INFEASIBLE = 0,
-	BRANCHING_STRATEGY_STRONG_BRANCHING = 1,
-	BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING = 2,
-	BRANCHING_STRATEGY_HYBRID = 3,
-	BRANCHING_STRATEGY_RANDOM = 4
-};
+	enum BRANCHING_STRATEGY
+	{
+		BRANCHING_STRATEGY_MOST_INFEASIBLE = 0,
+		BRANCHING_STRATEGY_STRONG_BRANCHING = 1,
+		BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING = 2,
+		BRANCHING_STRATEGY_RELIABILITY = 3,
+		BRANCHING_STRATEGY_RANDOM = 4
+	};
 
-typedef struct settings_bb{
-	idxint maxit;               /* maximum number of iterations         */
-    idxint verbose;             /* verbosity bool for PRINTLEVEL < 3    */
-	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
-	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
-	pfloat integer_tol; 		/* integer rounding tolerance */
-	enum BRANCHING_STRATEGY branching_strategy;
-	idxint reliableN; /* number of pseudocost values needed for costs to be reliable */
-} settings_bb;
+	enum  NODE_SELECTION_METHOD
+	{
+		BREADTH_FIRST = 0,
+		DIVE_LOWER_NODE = 1,
+		DIVE_UPPER_NODE = 2,
+	};
 
-typedef struct node {
-	char status;
-	pfloat L;
-	pfloat U;
-	pfloat Q;
-	idxint split_idx;
-	pfloat split_val;
-	idxint prev_split_idx;
-	pfloat prev_split_val;
-	pfloat prev_Q;
-	BOOL up_branch_node;
-} node;
+	typedef struct settings_bb {
+		idxint maxit;               /* maximum number of iterations         */
+		idxint verbose;             /* verbosity bool for PRINTLEVEL < 3    */
+		pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
+		pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
+		pfloat integer_tol; 		/* integer rounding tolerance */
+		enum BRANCHING_STRATEGY branching_strategy;
+		idxint reliable_eta; /* number of pseudocost values needed for costs to be reliable */
+		enum NODE_SELECTION_METHOD node_selection_method;
+	} settings_bb;
 
-/* Wrapper for mixed integer module */
-typedef struct ecos_bb_pwork{
-	/* Mixed integer data */
-	idxint num_bool_vars;
-	idxint num_int_vars;
+	typedef struct node {
+		char status;
+		pfloat L;
+		pfloat U;
+		pfloat relaxation;
+		idxint split_idx;
+		pfloat split_val;
+		idxint prev_split_idx;
+		pfloat prev_split_val;
+		pfloat prev_relaxation;
+		BOOL up_branch_node;
+	} node;
 
-	node* nodes;
-	char* bool_node_ids;
-	pfloat* int_node_ids;
+	/* Wrapper for mixed integer module */
+	typedef struct ecos_bb_pwork {
+		/* Mixed integer data */
+		idxint num_bool_vars;
+		idxint num_int_vars;
 
-	idxint* bool_vars_idx;
-	idxint* int_vars_idx;
+		node* nodes;
+		char* bool_node_ids;
+		pfloat* int_node_ids;
 
-	/* ECOS data */
-	pwork* ecos_prob;
+		idxint* bool_vars_idx;
+		idxint* int_vars_idx;
 
-	/* Modified pointers to ecos internals */
-	/* Use these to edit or reset the h variables */
-	spmat* A;
-	spmat* G;
-	pfloat* c;
-	pfloat* b;
-	pfloat* h;
+		/* ECOS data */
+		pwork* ecos_prob;
 
-	/* best iterate seen so far */
-    /* variables */
-    pfloat* x;  /* primal variables                    */
-    pfloat* y;  /* multipliers for equality constaints */
-    pfloat* z;  /* multipliers for conic inequalities  */
-    pfloat* s;  /* slacks for conic inequalities       */
-    pfloat kap; /* kappa (homogeneous embedding)       */
-	pfloat tau; /* tau (homogeneous embedding)         */
-    stats* info; /* info of best iterate               */
-	pfloat global_U;
-	pfloat global_L;
+		/* Modified pointers to ecos internals */
+		/* Use these to edit or reset the h variables */
+		spmat* A;
+		spmat* G;
+		pfloat* c;
+		pfloat* b;
+		pfloat* h;
 
-	/* Tmp data */
-	char* tmp_bool_node_id;
-	pfloat* tmp_int_node_id;
-	idxint iter;
-	idxint dive_node_id;
+		/* best iterate seen so far */
+		/* variables */
+		pfloat* x;  /* primal variables                    */
+		pfloat* y;  /* multipliers for equality constaints */
+		pfloat* z;  /* multipliers for conic inequalities  */
+		pfloat* s;  /* slacks for conic inequalities       */
+		pfloat kap; /* kappa (homogeneous embedding)       */
+		pfloat tau; /* tau (homogeneous embedding)         */
+		stats* info; /* info of best iterate               */
+		pfloat global_U;
+		pfloat global_L;
+
+		/* Tmp data */
+		char* tmp_bool_node_id;
+		pfloat* tmp_int_node_id;
+		idxint iter;
+		idxint dive_node_id;
 
 
-	/* Tmp nodes used for strong branching */
-	char* tmp_branching_bool_node_id;
-	pfloat* tmp_branching_int_node_id;
-	
-	/* Pseudocost branching values */
-	pfloat* pseudocost_bin_sum;
-	pfloat* pseudocost_int_sum;
-	idxint* pseudocost_bin_cnt;
-	idxint* pseudocost_int_cnt;
+		/* Tmp nodes used for strong branching */
+		char* tmp_branching_bool_node_id;
+		pfloat* tmp_branching_int_node_id;
 
-	/* Stored pointers to prevent memory leaks */
-	pfloat* Gpr_new;
-	idxint* Gjc_new;
-	idxint* Gir_new;
-	pfloat* h_new;
+		/* Pseudocost branching values */
+		pfloat* pseudocost_bin_sum;
+		pfloat* pseudocost_int_sum;
+		idxint* pseudocost_bin_cnt;
+		idxint* pseudocost_int_cnt;
 
-	/* settings struct */
-	settings* ecos_stgs;
-	settings_bb* stgs;
-	idxint default_settings;
+		/* Stored pointers to prevent memory leaks */
+		pfloat* Gpr_new;
+		idxint* Gjc_new;
+		idxint* Gir_new;
+		pfloat* h_new;
 
-} ecos_bb_pwork;
+		/* settings struct */
+		settings* ecos_stgs;
+		settings_bb* stgs;
+		idxint default_settings;
 
-ecos_bb_pwork* ECOS_BB_setup(
-    idxint n, idxint m, idxint p,
-    idxint l, idxint ncones, idxint* q, idxint nex,
-    pfloat* Gpr, idxint* Gjc, idxint* Gir,
-    pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b,
-    idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx,
-    settings_bb* stgs);
+	} ecos_bb_pwork;
 
-idxint ECOS_BB_solve(ecos_bb_pwork* prob);
+	ecos_bb_pwork* ECOS_BB_setup(
+		idxint n, idxint m, idxint p,
+		idxint l, idxint ncones, idxint* q, idxint nex,
+		pfloat* Gpr, idxint* Gjc, idxint* Gir,
+		pfloat* Apr, idxint* Ajc, idxint* Air,
+		pfloat* c, pfloat* h, pfloat* b,
+		idxint num_bool_vars, idxint* bool_vars_idx,
+		idxint num_int_vars, idxint* int_vars_idx,
+		settings_bb* stgs);
 
-void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
+	idxint ECOS_BB_solve(ecos_bb_pwork* prob);
 
-void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
+	void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
 
-void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
+	void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
 
-settings_bb* get_default_ECOS_BB_settings();
+	void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
 
-/* Calculate the offset into the node_id array */
-static char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->bool_node_ids[prob->num_bool_vars * idx];
-}
+	settings_bb* get_default_ECOS_BB_settings();
 
-static pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->int_node_ids[prob->num_int_vars * idx * 2];
-}
+	/* Calculate the offset into the node_id array */
+	static char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob) {
+		return &prob->bool_node_ids[prob->num_bool_vars * idx];
+	}
 
-static pfloat abs_2(pfloat number){
-	return number < 0.0 ? -number : number;
-}
+	static pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob) {
+		return &prob->int_node_ids[prob->num_int_vars * idx * 2];
+	}
 
-static pfloat pfloat_round(pfloat number){
-    return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
-}
+	static pfloat abs_2(pfloat number) {
+		return number < 0.0 ? -number : number;
+	}
 
-static pfloat pfloat_ceil(pfloat number, pfloat integer_tol){
-	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-integer_tol)) );
-}
+	static pfloat pfloat_round(pfloat number) {
 
-static pfloat pfloat_floor(pfloat number, pfloat integer_tol){
-    return (pfloat) (number < 0 ? (int) (number-(1-integer_tol)) : (int) number);
-}
+		return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
+	}
 
-static idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol){
-	return abs_2(a - b) < integer_tol;
-}
+	static pfloat pfloat_ceil(pfloat number, pfloat integer_tol) {
+		return (pfloat)(number < 0 ? (int)number : (int)(number + (1 - integer_tol)));
+	}
+
+	static pfloat pfloat_floor(pfloat number, pfloat integer_tol) {
+		return (pfloat)(number < 0 ? (int)(number - (1 - integer_tol)) : (int)number);
+	}
+
+	static idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol) {
+		return abs_2(a - b) < integer_tol;
+	}
 
 #ifdef __cplusplus
 }

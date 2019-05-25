@@ -571,7 +571,7 @@ result* ilp_qiu(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations
 }
 
 
-result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations, idxint nRel)
+result* ilp_PP08ACUTS(settings_bb* settings)
 {
 	clock_t t = clock();
 	idxint n = 486;
@@ -600,17 +600,12 @@ result* ilp_PP08ACUTS(enum BRANCHING_STRATEGY branching_strategy, idxint numIter
 	idxint num_int = 0;
 	idxint *int_idx = NULL;
 	ecos_bb_pwork *PP08ACUTS; idxint exitFlag;
-	settings_bb * settings = get_default_ECOS_BB_settings();
-	settings->branching_strategy = branching_strategy;
-	settings->reliableN = nRel;
-	if (numIterations != 0) {
-		settings->maxit = numIterations;
-	}
+	
 	PP08ACUTS = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
 	exitFlag = ECOS_BB_solve(PP08ACUTS);
 	t = clock() - t;
 
-	result* res = create_result("qiu", exitFlag, PP08ACUTS->global_U, branching_strategy, PP08ACUTS->iter, ((double)t) / CLOCKS_PER_SEC);
+	result* res = create_result("qiu", exitFlag, PP08ACUTS->global_U, settings->branching_strategy, PP08ACUTS->iter, ((double)t) / CLOCKS_PER_SEC);
 	ECOS_BB_cleanup(PP08ACUTS, 0);
 	return res;
 }
