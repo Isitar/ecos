@@ -346,7 +346,8 @@ static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up)
 {
 
     const pfloat epsilon = 0.00000001;
-    return max(epsilon, delta_q_down) * max(epsilon, delta_q_up);
+    return (delta_q_down > epsilon ? delta_q_down : epsilon) * (delta_q_up > epsilon ? delta_q_up : epsilon);
+
     // alternative score function using weighted avg
     // const pfloat mu = 1.0 / 6.0;
     // return (1 - mu) * min(delta_q_down, delta_q_up) + mu * max(delta_q_down, delta_q_up);
@@ -384,8 +385,9 @@ static void initialize_strong_branching(ecos_bb_pwork *problem, idxint node_idx)
     const int int_node_size = sizeof(pfloat) * 2 * problem->num_int_vars;
 
     // copy over current state to tmp_branching_nodes
-    memcpy_s(problem->tmp_branching_bool_node_id, bool_node_size, get_bool_node_id(node_idx, problem), bool_node_size);
-    memcpy_s(problem->tmp_branching_int_node_id, int_node_size, get_int_node_id(node_idx, problem), int_node_size);
+
+    memcpy(problem->tmp_branching_bool_node_id, get_bool_node_id(node_idx, problem), bool_node_size);
+    memcpy(problem->tmp_branching_int_node_id, get_int_node_id(node_idx, problem), int_node_size);
 }
 
 /*
@@ -402,8 +404,8 @@ static void calc_tmp_branching_problem(ecos_bb_pwork *problem, pfloat *relaxatio
  * Checks if the ecos result is infeasible, if so it fixes the variable to the other_val
  */
 static int check_infeasible_bool_var(ecos_bb_pwork *problem, const idxint ecos_result, const pfloat relaxation, const idxint node_idx,
-                                      const char other_val, const idxint var_idx, idxint *split_idx, pfloat *split_val,
-                                      const pfloat current_value)
+                                     const char other_val, const idxint var_idx, idxint *split_idx, pfloat *split_val,
+                                     const pfloat current_value)
 {
     if (is_infeasible(ecos_result) || relaxation > problem->global_U)
     {
@@ -428,8 +430,8 @@ static int check_infeasible_bool_var(ecos_bb_pwork *problem, const idxint ecos_r
  * Checks if the ecos result is infeasible, if so it fixes the variable
  */
 static int check_infeasible_int_var(ecos_bb_pwork *problem, const idxint ecos_result, const pfloat relaxation, const idxint node_idx,
-                                     const int fix_lb, const idxint var_idx, idxint *split_idx, pfloat *split_val,
-                                     const pfloat current_value)
+                                    const int fix_lb, const idxint var_idx, idxint *split_idx, pfloat *split_val,
+                                    const pfloat current_value)
 {
     if (is_infeasible(ecos_result) || relaxation > problem->global_U)
     {
@@ -458,7 +460,7 @@ static int check_infeasible_int_var(ecos_bb_pwork *problem, const idxint ecos_re
  * returns 1 if one of the paths is infeasible
  */
 static int strong_branch_bool_var(ecos_bb_pwork *problem, idxint *split_idx, pfloat *split_val, const idxint node_idx,
-                                   pfloat *q_down, pfloat *q_up, const idxint i, const pfloat current_value)
+                                  pfloat *q_down, pfloat *q_up, const idxint i, const pfloat current_value)
 {
     // save val before branching
     const char orig_val = problem->tmp_branching_bool_node_id[i];
@@ -530,7 +532,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork *problem, idxint *spli
     pfloat q;
     calc_tmp_branching_problem(problem, &q, &ecos_result);
     pfloat *x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
-    memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
+    memcpy(x_values, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
 
     /* the lp-relaxation for the down branching solution */
     pfloat q_down;
@@ -590,7 +592,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork *problem, idxint *spli
         }
     }
     free(x_values);
-
+    free(random_idx);
     problem->ecos_prob->stgs->maxit = orig_maxit;
     problem->ecos_prob->stgs->max_bk_iter = orig_maxit_bk;
 
@@ -714,7 +716,7 @@ static void get_branch_var_pseudocost_branching(ecos_bb_pwork *problem, idxint *
             high_score = score;
         }
     }
-
+    free(random_idx);
 #if MI_PRINTLEVEL > 1
     PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
@@ -791,7 +793,7 @@ static void get_branch_var_reliability_branching(ecos_bb_pwork *problem, idxint 
 
                 calc_tmp_branching_problem(problem, &q, &ecos_result);
                 x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
-                memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
+                memcpy(x_values, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
             }
 
             var_idx = i;
@@ -838,7 +840,7 @@ static void get_branch_var_reliability_branching(ecos_bb_pwork *problem, idxint 
             high_score = score;
         }
     }
-
+    free(random_idx);
 #if MI_PRINTLEVEL > 1
     PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
