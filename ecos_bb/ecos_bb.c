@@ -31,6 +31,7 @@
 #include "math.h"
 #include "equil.h"
 #include "spla.h"
+#include <time.h>
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 
@@ -1128,7 +1129,27 @@ idxint ECOS_BB_solve(ecos_bb_pwork *prob)
         PRINTTEXT("================================================\n");
     }
 #endif
+#if LPA_FILE > 0 
+	time_t rawtime = time(NULL);
+	char filename[255];
+	char time_str[26];
+	struct tm tm_info;
+	localtime_s(&tm_info, &rawtime);
+	strftime(time_str, sizeof(time_str), "%Y_%m_%d_%H_%M_%S", &tm_info);
+	if (prob->stgs->branching_strategy == BRANCHING_STRATEGY_RELIABILITY) {
+		sprintf_s(filename, sizeof(filename), "%s_%d_%d.csv", time_str, prob->stgs->branching_strategy, prob->stgs->reliable_eta);
+	}
+	else {
+		sprintf_s(filename, sizeof(filename), "%s_%d.csv", time_str, prob->stgs->branching_strategy);
+	}
 
+	FILE *fp;
+	errno_t retVal = fopen_s(&fp, filename, "w");
+
+	fprintf_s(fp, "time;iter;L;U\n");
+	clock_t start_clock = clock();
+
+#endif
     /* Initialize to root node and execute steps 1 on slide 6 */
     /* of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf*/
     prob->iter = 0;
@@ -1148,7 +1169,9 @@ idxint ECOS_BB_solve(ecos_bb_pwork *prob)
             print_progress(prob);
         }
 #endif
-
+#if LPA_FILE > 0 
+		fprintf_s(fp, "%d;%u;%.2f;%.2f\n", clock() - start_clock, (int)prob->iter, prob->global_L, prob->global_U);
+#endif
 		++(prob->iter);
 
 		/* Step 2*/
@@ -1172,6 +1195,9 @@ idxint ECOS_BB_solve(ecos_bb_pwork *prob)
     {
         print_progress(prob);
     }
+#endif
+#if LPA_FILE > 0 
+	fclose(fp);
 #endif
     return get_ret_code(prob);
 }
