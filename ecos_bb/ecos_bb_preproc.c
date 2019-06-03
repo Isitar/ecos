@@ -43,6 +43,7 @@
 #define CALLOC calloc
 #endif
 
+
 static int contains(idxint idx, idxint num_int, idxint *bool_vars_idx)
 {
     idxint i;

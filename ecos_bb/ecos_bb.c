@@ -34,6 +34,7 @@
 #include <time.h>
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define LPA_FILE (1)
 
    /* Print utility functions*/
 #if MI_PRINTLEVEL > 0

@@ -20,55 +20,51 @@ int main(void)
 	result* result_random_branching = NULL;
 	result* result_hybrid_branching = NULL;
 
-
-
-	
-
 	settings_bb* settings = get_default_ECOS_BB_settings();
-	settings->maxit = 50000;
+	settings->maxit = 5000;
 	settings->branching_strategy = BRANCHING_STRATEGY_RELIABILITY;
 	settings->reliable_eta = 1;
-	settings->node_selection_method = BREADTH_FIRST;
+	settings->node_selection_method = DIVE_UPPER_NODE;
+
+		
 	PRINTTEXT("Calling with branching strategy 3\n");
-	result_hybrid_branching = ilp_PP08ACUTS(settings);
+	result_hybrid_branching = ilp_gen_ip054(settings);
 	
-	/*PRINTTEXT("Calling with branching strategy 3\n");
+	PRINTTEXT("Calling with branching strategy 3\n");
 	settings->reliable_eta = 4;
-	result_hybrid_branching = ilp_PP08ACUTS(settings);
+	result_hybrid_branching = ilp_gen_ip054(settings);
 	
 	PRINTTEXT("Calling with branching strategy 3\n");
-	settings->reliableN = 6;
-	result_hybrid_branching = ilp_PP08ACUTS(settings);
+	settings->reliable_eta = 6;
+	result_hybrid_branching = ilp_gen_ip054(settings);
 	
 	PRINTTEXT("Calling with branching strategy 3\n");
-	settings->reliableN = 8;
-	result_hybrid_branching = ilp_PP08ACUTS(settings);
+	settings->reliable_eta = 8;
+	result_hybrid_branching = ilp_gen_ip054(settings);
 
 	PRINTTEXT("Calling with branching strategy 3\n");
-	settings->reliableN = 20;
-	result_hybrid_branching = ilp_PP08ACUTS(settings);
+	settings->reliable_eta = 20;
+	result_hybrid_branching = ilp_gen_ip054(settings);
 
 	
 	PRINTTEXT("Calling with branching strategy 2\n");
 	settings->branching_strategy = BRANCHING_STRATEGY_PSEUDOCOST_BRANCHING;
-	result_pseudo_branching = ilp_PP08ACUTS(settings);
+	result_pseudo_branching = ilp_gen_ip054(settings);
 
 
 	PRINTTEXT("Calling with branching strategy 4\n");
 	settings->branching_strategy = BRANCHING_STRATEGY_RANDOM;
-	result_random_branching = ilp_PP08ACUTS(settings);
-	*/
+	result_random_branching = ilp_gen_ip054(settings);
+	
 	PRINTTEXT("Calling with branching strategy 0\n");
 	settings->branching_strategy = BRANCHING_STRATEGY_MOST_INFEASIBLE;
-	result_most_infeasible = ilp_PP08ACUTS(settings);
-	/*
+	result_most_infeasible = ilp_gen_ip054(settings);
+	
 	PRINTTEXT("Calling with branching strategy 1\n");
 	settings->branching_strategy = BRANCHING_STRATEGY_STRONG_BRANCHING;
+	//settings->maxit /= 2;
+	result_strong_branching = ilp_gen_ip054(settings);
 	
-
-	settings->maxit /= 2;
-	result_strong_branching = ilp_PP08ACUTS(settings);
-	*/
 	print_result_header();
 
 	time_t rawtime = time(NULL);

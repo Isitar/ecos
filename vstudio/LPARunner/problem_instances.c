@@ -326,8 +326,9 @@ int ilp_noswot(const idxint branching_strategy)
  *ROWS   COLS     INT     0/1    CONT        INT SOLN          LP SOLN
  *91     104      58      30      46       8966406.49       8608417.95
  */
-int ilp_BELL5(const idxint branching_strategy)
+result* ilp_BELL5(settings_bb* settings)
 {
+	clock_t t = clock();
 	idxint n = 223;
 	idxint m = 223;
 	idxint p = 119;
@@ -353,22 +354,19 @@ int ilp_BELL5(const idxint branching_strategy)
 	idxint bool_idx[30] = { 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120 };
 	idxint num_int = 28;
 	idxint int_idx[28] = { 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148 };
-	ecos_bb_pwork *BELL5; idxint exitFlag;
-	settings_bb * settings = get_default_ECOS_BB_settings();
-	settings->branching_strategy = branching_strategy;
-	BELL5 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
-	exitFlag = ECOS_BB_solve(BELL5);
-	PRINTTEXT("exit flag: % d\n", exitFlag);
-	PRINTTEXT("cost: %f\n", eddot(BELL5->ecos_prob->n, BELL5->ecos_prob->x, BELL5->ecos_prob->c));
-	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, BELL5->x[i]); }
-	PRINTTEXT("UB: %f\n", BELL5->nodes->U);
-	PRINTTEXT("LB: %f\n", BELL5->nodes->L);
-	ECOS_BB_cleanup(BELL5, 0);
-	return exitFlag;
+	ecos_bb_pwork *problem; idxint exitFlag;
+	problem = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
+	exitFlag = ECOS_BB_solve(problem);
+	t = clock() - t;
+
+	result* res = create_result("bell5", exitFlag, problem->global_U, settings->branching_strategy, problem->iter, ((double)t) / CLOCKS_PER_SEC);
+	ECOS_BB_cleanup(problem, 0);
+	return res;
 }
 
-int ilp_gen_ip054(const idxint branching_strategy)
+result* ilp_gen_ip054(settings_bb* settings)
 {
+	clock_t t = clock();
 	idxint n = 87;
 	idxint m = 87;
 	idxint p = 57;
@@ -394,22 +392,18 @@ int ilp_gen_ip054(const idxint branching_strategy)
 	idxint *bool_idx = NULL;
 	idxint num_int = 30;
 	idxint int_idx[30] = { 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56 };
-	ecos_bb_pwork *gen_ip054; idxint exitFlag;
-	settings_bb * settings = get_default_ECOS_BB_settings();
-	settings->branching_strategy = branching_strategy;
-	gen_ip054 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
-	exitFlag = ECOS_BB_solve(gen_ip054);
-	PRINTTEXT("exit flag: % d\n", exitFlag);
-	PRINTTEXT("cost: %f\n", eddot(gen_ip054->ecos_prob->n, gen_ip054->ecos_prob->x, gen_ip054->ecos_prob->c));
-	for (int i = 0; i < n; i++) { PRINTTEXT("X %d: %f\n", i, gen_ip054->x[i]); }
-	PRINTTEXT("UB: %f\n", gen_ip054->nodes->U);
-	PRINTTEXT("LB: %f\n", gen_ip054->nodes->L);
-	ECOS_BB_cleanup(gen_ip054, 0);
-	return exitFlag;
+	ecos_bb_pwork *problem; idxint exitFlag;
+	problem = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
+	exitFlag = ECOS_BB_solve(problem);
+	t = clock() - t;
+
+	result* res = create_result("gen_ip054", exitFlag, problem->global_U, settings->branching_strategy, problem->iter, ((double)t) / CLOCKS_PER_SEC);
+	ECOS_BB_cleanup(problem, 0);
+	return res;
 }
 
 
-result* ilp_markshare_4_0(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations)
+result* ilp_markshare_4_0(settings_bb* settings)
 {
 	clock_t t = clock();
 	idxint n = 34;
@@ -437,28 +431,13 @@ result* ilp_markshare_4_0(enum BRANCHING_STRATEGY branching_strategy, idxint num
 	idxint bool_idx[30] = { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33 };
 	idxint num_int = 0;
 	idxint *int_idx = NULL;
-	ecos_bb_pwork *markshare_4_0; idxint exitFlag;
-
-
-	settings_bb* settings = get_default_ECOS_BB_settings();
-	settings->branching_strategy = branching_strategy;
-	if (numIterations == 0) {
-		if (branching_strategy == 0)
-		{
-			settings->maxit *= 15;
-		}
-	}
-	else
-	{
-		settings->maxit = numIterations;
-	}
-
-	markshare_4_0 = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
-	exitFlag = ECOS_BB_solve(markshare_4_0);
+	ecos_bb_pwork *problem; idxint exitFlag;
+	problem = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
+	exitFlag = ECOS_BB_solve(problem);
 	t = clock() - t;
 
-	result* res = create_result("markshare_4_0", exitFlag, markshare_4_0->global_U, branching_strategy, markshare_4_0->iter, ((double)t) / CLOCKS_PER_SEC);
-	ECOS_BB_cleanup(markshare_4_0, 0);
+	result* res = create_result("markshare_4_0", exitFlag, problem->global_U, settings->branching_strategy, problem->iter, ((double)t) / CLOCKS_PER_SEC);
+	ECOS_BB_cleanup(problem, 0);
 	return res;
 }
 
@@ -570,6 +549,47 @@ result* ilp_qiu(enum BRANCHING_STRATEGY branching_strategy, idxint numIterations
 	return res;
 }
 
+result* ilp_issue_166(settings_bb* settings)
+{
+	clock_t t = clock();
+	idxint n = 2;
+	idxint m = 2;
+	idxint p = 1;
+	idxint l = 2;
+	idxint nCones = 0;
+
+	// cost function
+	pfloat c[2] = { 0, 0 };
+
+	//cone
+	idxint Gjc[3] = { 0, 1, 2 };
+	idxint Gir[2] = { 0, 1 };
+	pfloat Gpr[2] = { -1.0, -1.0 };
+	pfloat h[2] = { 0.0, 0.0 };
+	idxint *q = NULL;
+
+	//lp matrix
+	idxint Ajc[3] = { 0, 1, 2 };
+	idxint Air[2] = { 0, 0 };
+	pfloat Apr[2] = { 1, 0 };
+	pfloat b[1] = { -1 };
+	idxint num_bool = 1;
+	idxint bool_idx[1] = { 1 };
+	idxint num_int = 0;
+	idxint *int_idx = NULL;
+	
+	ecos_bb_pwork *problem; 
+	idxint exitFlag;
+
+	problem = ECOS_BB_setup(n, m, p, l, nCones, q, 0, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b, num_bool, bool_idx, num_int, int_idx, settings);
+	exitFlag = ECOS_BB_solve(problem);
+	t = clock() - t;
+
+	result* res = create_result("pp08acuts", exitFlag, problem->global_U, settings->branching_strategy, problem->iter, ((double)t) / CLOCKS_PER_SEC);
+	ECOS_BB_cleanup(problem, 0);
+	return res;
+}
+
 
 result* ilp_PP08ACUTS(settings_bb* settings)
 {
@@ -605,7 +625,7 @@ result* ilp_PP08ACUTS(settings_bb* settings)
 	exitFlag = ECOS_BB_solve(PP08ACUTS);
 	t = clock() - t;
 
-	result* res = create_result("qiu", exitFlag, PP08ACUTS->global_U, settings->branching_strategy, PP08ACUTS->iter, ((double)t) / CLOCKS_PER_SEC);
+	result* res = create_result("pp08acuts", exitFlag, PP08ACUTS->global_U, settings->branching_strategy, PP08ACUTS->iter, ((double)t) / CLOCKS_PER_SEC);
 	ECOS_BB_cleanup(PP08ACUTS, 0);
 	return res;
 }
