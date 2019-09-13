@@ -842,6 +842,7 @@ static void get_branch_var_reliability_branching(ecos_bb_pwork *problem, idxint 
         }
     }
     free(random_idx);
+    free(x_values);
 #if MI_PRINTLEVEL > 1
     PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
 #endif
